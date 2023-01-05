@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import io.github.resilience4j.retry.annotation.Retry;
+
 @RestController
 public class CurrencyConversionController {
 	
@@ -46,6 +48,7 @@ public class CurrencyConversionController {
 	}
 
 	@GetMapping("/currency-conversion-feign/from/{from}/to/{to}/quantity/{quantity}")
+	@Retry(name="currency-conversion-feign")
 	public CurrencyConversion calculateCurrencyConversionFeign(
 			@PathVariable String from,
 			@PathVariable String to,
