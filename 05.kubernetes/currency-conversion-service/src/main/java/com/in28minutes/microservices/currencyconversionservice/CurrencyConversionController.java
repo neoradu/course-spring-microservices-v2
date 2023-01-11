@@ -6,6 +6,7 @@ import java.util.HashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,6 +20,12 @@ public class CurrencyConversionController {
 	
 	@Autowired
 	private CurrencyExchangeProxy proxy;
+	
+	@Value("${CURRENCY_EXCHANGE_SERVICE_HOST:null}")
+	private String CURRENCY_EXCHANGE_SERVICE_HOST;
+
+	@Value("${HOSTNAME:null}")
+	private String HOSTNAME;
 	
 	@GetMapping("/currency-conversion/from/{from}/to/{to}/quantity/{quantity}")
 	public CurrencyConversion calculateCurrencyConversion(
@@ -64,7 +71,9 @@ public class CurrencyConversionController {
 				from, to, quantity, 
 				currencyConversion.getConversionMultiple(), 
 				quantity.multiply(currencyConversion.getConversionMultiple()), 
-				currencyConversion.getEnvironment() + " " + "feign");
+				currencyConversion.getEnvironment() + 
+				String.format("| CURRENCY_EXCHANGE_SERVICE_HOST:%s HOSTNAME:%s",
+				              CURRENCY_EXCHANGE_SERVICE_HOST, HOSTNAME));
 		
 	}
 

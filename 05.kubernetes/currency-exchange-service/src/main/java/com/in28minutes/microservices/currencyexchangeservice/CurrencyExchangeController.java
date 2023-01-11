@@ -40,7 +40,7 @@ public class CurrencyExchangeController {
 		String host = environment.getProperty("HOSTNAME");
 		String version = "v11";
 		
-		currencyExchange.setEnvironment(port + " " + version + " " + host);
+		currencyExchange.setEnvironment(String.format("port:%s, v:%s, HOSTNAME:%s ", port,version, host));
 		
 		return currencyExchange;
 		

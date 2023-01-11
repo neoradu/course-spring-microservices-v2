@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+  labels:
+    app: currency-conversion
+  name: currency-conversion
+  namespace: default
+spec:
+  replicas: 1 # <-- number o pods
+  selector:
+    matchLabels: # we say that this deployment is applicable to all pods that have this label
+      app: currency-conversion
+  strategy:
+    rollingUpdate: #configure the number of instances to be available/ unavailable when doing an image update
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate # the default update strategy
+  template:
+    metadata:
+      labels:
+        app: currency-conversion
+    spec:
+      containers: #specification of the container that is running in th pod
+      - image: neoradu/mmv2-currency-conversion-service:0.0.11-SNAPSHOT
+        imagePullPolicy: IfNotPresent # or Always
+        name: mmv2-currency-conversion-service
+# --> can have multiple containers
+#      - image: neoradu/mmv2-currency-conversion-service:0.0.11-SNAPSHOT
+#        imagePullPolicy: IfNotPresent # or Always
+#        name: mmv2-currency-conversion-service
+      restartPolicy: Always #pod restart policy
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+  labels:
+    app: currency-exchange 
+  name: currency-exchange 
+  namespace: default
+spec:
+  replicas: 1 # <-- number o pods
+  selector:
+    matchLabels: # we say that this deployment is applicable to all pods that have this label
+      app: currency-exchange 
+  strategy:
+    rollingUpdate: #configure the number of instances to be available/ unavailable when doing an image update
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate # the default update strategy
+  template:
+    metadata:
+      labels:
+        app: currency-exchange 
+    spec:
+      containers: #specification of the container that is running in th pod
+      - image: neoradu/mmv2-currency-exchange-service:0.0.11-SNAPSHOT
+        imagePullPolicy: IfNotPresent # or Always
+        name: mmv2-currency-exchange-service
+      restartPolicy: Always #pod restart policy
+---
+#load balancer services
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: currency-conversion
+  name: currency-conversion
+  namespace: default
+spec:
+  ports:
+  - port: 8100
+    protocol: TCP
+    targetPort: 8100
+  selector:
+    app: currency-conversion # we expose the ports of deployments that match these labels
+  sessionAffinity: None # we use REST Api so we do not not need this
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    networking.gke.io/load-balancer-type: "Internal" # do not expose to internet
+  labels:
+    app: currency-exchange 
+  name: currency-exchange 
+  namespace: default
+spec:
+  ports:
+  - port: 8000
+    protocol: TCP
+    targetPort: 8000
+  selector:
+    app: currency-exchange  # we expose the ports of deployments that match these labels
+  sessionAffinity: None # we use REST Api so we do not not need this
+  type: LoadBalancer
