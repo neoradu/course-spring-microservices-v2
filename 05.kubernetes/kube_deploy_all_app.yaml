@@ -1,3 +1,11 @@
+apiVersion: v1
+data:
+  CURRENCY_EXCHANGE_URI: http://currency-exchange
+kind: ConfigMap
+metadata:
+  name: currency-conversion
+  namespace: default
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -23,13 +31,31 @@ spec:
         app: currency-conversion
     spec:
       containers: #specification of the container that is running in th pod
-      - image: neoradu/mmv2-currency-conversion-service:0.0.11-SNAPSHOT
+#      - image: neoradu/mmv2-currency-conversion-service:0.0.11-SNAPSHOT
+      - image: neoradu/mmv2-currency-conversion-service:0.0.12-SNAPSHOT
         imagePullPolicy: IfNotPresent # or Always
         name: mmv2-currency-conversion-service
+#take the enviroment variables from a config map
+        envFrom: 
+          - configMapRef:
+              name: currency-conversion
+#        env: <-- do not hardcode this
+#          - name: CURRENCY_EXCHANGE_URI
+#            value: http://currency-exchange
 # --> can have multiple containers
 #      - image: neoradu/mmv2-currency-conversion-service:0.0.11-SNAPSHOT
 #        imagePullPolicy: IfNotPresent # or Always
 #        name: mmv2-currency-conversion-service
+        readinessProbe:
+          httpGet:
+            port: 8100
+            path: /actuator/health/readiness
+        livenessProbe:
+          httpGet:
+            port: 8100
+            path: /actuator/health/liveness
+          initialDelaySeconds: 80
+          periodSeconds: 10
       restartPolicy: Always #pod restart policy
 ---
 apiVersion: apps/v1
@@ -57,9 +83,20 @@ spec:
         app: currency-exchange 
     spec:
       containers: #specification of the container that is running in th pod
-      - image: neoradu/mmv2-currency-exchange-service:0.0.11-SNAPSHOT
+#      - image: neoradu/mmv2-currency-exchange-service:0.0.11-SNAPSHOT
+      - image: neoradu/mmv2-currency-exchange-service:0.0.12-SNAPSHOT
         imagePullPolicy: IfNotPresent # or Always
         name: mmv2-currency-exchange-service
+        readinessProbe:
+          httpGet:
+            port: 8000
+            path: /actuator/health/readiness
+        livenessProbe:
+          httpGet:
+            port: 8000
+            path: /actuator/health/liveness
+          initialDelaySeconds: 80
+          periodSeconds: 10   
       restartPolicy: Always #pod restart policy
 ---
 #load balancer services
